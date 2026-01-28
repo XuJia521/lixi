@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>利息计算器</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="利息计算">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2830/2830284.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px 16px;
+            padding-top: calc(20px + env(safe-area-inset-top));
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 14px;
+            font-size: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f8f9fa;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            background: white;
+        }
+
+        .input-wrapper input::placeholder {
+            color: #aaa;
+        }
+
+        .input-hint {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 6px;
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper.has-suffix input {
+            padding-right: 45px;
+        }
+
+        .date-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .date-row .form-group {
+            flex: 1;
+        }
+
+        .date-display {
+            font-size: 0.8rem;
+            color: #6c5ce7;
+            margin-top: 6px;
+            min-height: 18px;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a55eea 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+            margin-top: 10px;
+        }
+
+        .btn-calculate:active {
+            transform: scale(0.98);
+        }
+
+        .result-card {
+            display: none;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a55eea 100%);
+            color: white;
+        }
+
+        .result-card.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-header h2 {
+            font-size: 1rem;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .result-amount {
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        .result-details {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .result-row:not(:last-child) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .result-row .label {
+            opacity: 0.9;
+        }
+
+        .result-row .value {
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-icon">💰</div>
+        <h1>利息计算器</h1>
+        <p>按年利率 / 360天计算</p>
+    </div>
+
+    <div class="card">
+        <div class="form-group">
+            <label class="form-label">本金（元）</label>
+            <div class="input-wrapper">
+                <input type="number" id="principal" placeholder="请输入本金金额" inputmode="decimal">
+            </div>
+        </div>
+
+        <div class="date-row">
+            <div class="form-group">
+                <label class="form-label">起算日期</label>
+                <div class="input-wrapper">
+                    <input type="text" id="startDate" placeholder="如 20200103" maxlength="8" inputmode="numeric">
+                </div>
+                <div class="date-display" id="startDateDisplay"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">截止日期</label>
+                <div class="input-wrapper">
+                    <input type="text" id="endDate" placeholder="如 20231231" maxlength="8" inputmode="numeric">
+                </div>
+                <div class="date-display" id="endDateDisplay"></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">年利率</label>
+            <div class="input-wrapper has-suffix">
+                <input type="number" id="rate" placeholder="如 14.6" inputmode="decimal" step="0.01">
+                <span class="input-suffix">%</span>
+            </div>
+        </div>
+
+        <button class="btn-calculate" onclick="calculate()">
+            <span>🧮</span>
+            <span>计算利息</span>
+        </button>
+    </div>
+
+    <div class="card result-card" id="resultCard">
+        <div class="result-header">
+            <h2>应付利息</h2>
+            <div class="result-amount" id="interestAmount">¥0.00</div>
+        </div>
+        <div class="result-details">
+            <div class="result-row">
+                <span class="label">本金</span>
+                <span class="value" id="resultPrincipal">-</span>
+            </div>
+            <div class="result-row">
+                <span class="label">计息期间</span>
+                <span class="value" id="resultPeriod">-</span>
+            </div>
+            <div class="result-row">
+                <span class="label">计息天数</span>
+                <span class="value" id="resultDays">-</span>
+            </div>
+            <div class="result-row">
+                <span class="label">年利率</span>
+                <span class="value" id="resultRate">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        公式：利息 = 本金 × 天数 × 年利率 ÷ 360
+    </div>
+
+    <script>
+        // 解析8位日期字符串
+        function parseDate(str) {
+            if (!str || str.length !== 8) return null;
+            const year = parseInt(str.substring(0, 4));
+            const month = parseInt(str.substring(4, 6));
+            const day = parseInt(str.substring(6, 8));
+            
+            // 验证日期有效性
+            if (year < 1900 || year > 2100) return null;
+            if (month < 1 || month > 12) return null;
+            if (day < 1 || day > 31) return null;
+            
+            const date = new Date(year, month - 1, day);
+            // 检查日期是否有效（防止如2月30日）
+            if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+                return null;
+            }
+            return date;
+        }
+
+        // 格式化日期显示
+        function formatDate(str) {
+            const date = parseDate(str);
+            if (!date) return '';
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${year}年${month}月${day}日`;
+        }
+
+        // 计算两个日期之间的天数
+        function daysBetween(date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000;
+            return Math.round(Math.abs((date2 - date1) / oneDay));
+        }
+
+        // 截断到2位小数（不四舍五入）
+        function truncateToTwo(num) {
+            return Math.floor(num * 100) / 100;
+        }
+
+        // 格式化金额
+        function formatMoney(num) {
+            return num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // 监听日期输入，实时显示
+        document.getElementById('startDate').addEventListener('input', function() {
+            const display = document.getElementById('startDateDisplay');
+            const formatted = formatDate(this.value);
+            display.textContent = formatted;
+        });
+
+        document.getElementById('endDate').addEventListener('input', function() {
+            const display = document.getElementById('endDateDisplay');
+            const formatted = formatDate(this.value);
+            display.textContent = formatted;
+        });
+
+        // 只允许输入数字
+        document.getElementById('startDate').addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        document.getElementById('endDate').addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        function calculate() {
+            const principal = parseFloat(document.getElementById('principal').value);
+            const startDateStr = document.getElementById('startDate').value;
+            const endDateStr = document.getElementById('endDate').value;
+            const rate = parseFloat(document.getElementById('rate').value);
+
+            // 验证输入
+            if (!principal || principal <= 0) {
+                alert('请输入有效的本金金额');
+                return;
+            }
+
+            const startDate = parseDate(startDateStr);
+            if (!startDate) {
+                alert('请输入有效的起算日期（8位数字，如20200103）');
+                return;
+            }
+
+            const endDate = parseDate(endDateStr);
+            if (!endDate) {
+                alert('请输入有效的截止日期（8位数字，如20231231）');
+                return;
+            }
+
+            if (endDate <= startDate) {
+                alert('截止日期必须晚于起算日期');
+                return;
+            }
+
+            if (!rate || rate <= 0) {
+                alert('请输入有效的年利率');
+                return;
+            }
+
+            // 计算天数
+            const days = daysBetween(startDate, endDate);
+
+            // 计算利息：本金 × 天数 × 年利率 / 360
+            const interest = principal * days * (rate / 100) / 360;
+            const truncatedInterest = truncateToTwo(interest);
+
+            // 显示结果
+            document.getElementById('interestAmount').textContent = '¥' + formatMoney(truncatedInterest);
+            document.getElementById('resultPrincipal').textContent = '¥' + formatMoney(principal);
+            document.getElementById('resultPeriod').textContent = formatDate(startDateStr) + ' 至 ' + formatDate(endDateStr);
+            document.getElementById('resultDays').textContent = days + ' 天';
+            document.getElementById('resultRate').textContent = rate + '%';
+
+            const resultCard = document.getElementById('resultCard');
+            resultCard.classList.add('show');
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>
